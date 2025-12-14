@@ -185,30 +185,39 @@ setup_python_environment() {
 copy_application_files() {
     print_header "Copying Application Files"
 
-    # Check if files exist in current directory
+    # Check if files exist in current directory or if we need to get them from git
     if [ ! -f "app.py" ]; then
-        print_error "Application files not found in current directory. Please run this script from the project directory."
+        if [ -d ".git" ]; then
+            print_info "Git repository detected, files should be present"
+        else
+            print_error "Application files not found. Please run this script from the project directory or clone the repository first."
+        fi
     fi
 
-    # Copy Python files
-    cp app.py "$PROJECT_DIR/" && print_step "Copied app.py"
-    cp scraper.py "$PROJECT_DIR/" && print_step "Copied scraper.py"
-    cp whatsapp_sender.py "$PROJECT_DIR/" && print_step "Copied whatsapp_sender.py"
-    cp scheduler.py "$PROJECT_DIR/" && print_step "Copied scheduler.py"
-    cp database.py "$PROJECT_DIR/" && print_step "Copied database.py"
+    # Copy Python files (if they exist, skip if already in place)
+    [ -f "app.py" ] && cp app.py "$PROJECT_DIR/" && print_step "Copied app.py"
+    [ -f "scraper.py" ] && cp scraper.py "$PROJECT_DIR/" && print_step "Copied scraper.py"
+    [ -f "whatsapp_sender.py" ] && cp whatsapp_sender.py "$PROJECT_DIR/" && print_step "Copied whatsapp_sender.py"
+    [ -f "scheduler.py" ] && cp scheduler.py "$PROJECT_DIR/" && print_step "Copied scheduler.py"
+    [ -f "database.py" ] && cp database.py "$PROJECT_DIR/" && print_step "Copied database.py"
 
     # Copy configuration files
-    cp requirements.txt "$PROJECT_DIR/" && print_step "Copied requirements.txt"
+    [ -f "requirements.txt" ] && cp requirements.txt "$PROJECT_DIR/" && print_step "Copied requirements.txt"
 
     # Copy service file
-    cp cyber-intel.service "$PROJECT_DIR/" && print_step "Copied systemd service file"
+    [ -f "cyber-intel.service" ] && cp cyber-intel.service "$PROJECT_DIR/" && print_step "Copied systemd service file"
 
     # Copy frontend files
-    cp -r templates/* "$PROJECT_DIR/templates/" 2>/dev/null && print_step "Copied templates"
-    cp -r static/* "$PROJECT_DIR/static/" 2>/dev/null && print_step "Copied static files"
+    [ -d "templates" ] && cp -r templates/* "$PROJECT_DIR/templates/" 2>/dev/null && print_step "Copied templates"
+    [ -d "static" ] && cp -r static/* "$PROJECT_DIR/static/" 2>/dev/null && print_step "Copied static files"
 
     # Copy documentation
-    cp *.md "$PROJECT_DIR/" 2>/dev/null && print_step "Copied documentation"
+    ls *.md >/dev/null 2>&1 && cp *.md "$PROJECT_DIR/" 2>/dev/null && print_step "Copied documentation"
+
+    # Verify key files exist
+    if [ ! -f "$PROJECT_DIR/app.py" ]; then
+        print_error "Failed to copy application files. Please ensure you have the required files."
+    fi
 }
 
 install_python_packages() {
