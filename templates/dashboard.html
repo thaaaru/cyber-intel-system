@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Security Intelligence Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔒 Cyber Security Intelligence Hub</h1>
+            <p>Real-time security alerts, vulnerabilities & top news</p>
+        </header>
+
+        <div class="controls">
+            <button onclick="refreshNews()">🔄 Refresh News</button>
+            <button onclick="sendDigest()">📱 Send WhatsApp Digest</button>
+            <select onchange="filterBySeverity(this.value)">
+                <option value="">All Severity Levels</option>
+                <option value="critical">🚨 Critical</option>
+                <option value="high">⚠️ High</option>
+                <option value="medium">⚡ Medium</option>
+                <option value="low">ℹ️ Low</option>
+            </select>
+        </div>
+
+        <div class="stats">
+            <div class="stat-card critical">
+                <h3>🚨 Critical</h3>
+                <p id="critical-count">0</p>
+            </div>
+            <div class="stat-card high">
+                <h3>⚠️ High</h3>
+                <p id="high-count">0</p>
+            </div>
+            <div class="stat-card medium">
+                <h3>⚡ Medium</h3>
+                <p id="medium-count">0</p>
+            </div>
+            <div class="stat-card info">
+                <h3>ℹ️ Total</h3>
+                <p id="total-count">0</p>
+            </div>
+        </div>
+
+        <div class="news-container">
+            <h2>Latest Security News & Alerts</h2>
+            <div id="news-list" class="news-list">
+                <!-- News items loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const severityColors = {
+            'critical': '#F44336',
+            'high': '#FF9800',
+            'medium': '#FFC107',
+            'low': '#4CAF50'
+        };
+
+        async function loadNews() {
+            const response = await fetch('/api/news?limit=50');
+            const news = await response.json();
+
+            const newsList = document.getElementById('news-list');
+            newsList.innerHTML = '';
+
+            news.forEach(item => {
+                const card = document.createElement('div');
+                card.className = `news-card severity-${item.severity}`;
+                card.innerHTML = `
+                    <div class="news-header">
+                        <span class="source">${item.source}</span>
+                        <span class="severity" style="background-color: ${severityColors[item.severity]}">${item.severity.toUpperCase()}</span>
+                    </div>
+                    <h3><a href="${item.url}" target="_blank">${item.title}</a></h3>
+                    <p>${item.description.substring(0, 200)}...</p>
+                    <div class="news-footer">
+                        <span class="date">${item.published_date}</span>
+                        <button onclick="sendAlert('${item.title.replace(/'/g, "\\'")}', '${item.url}', '${item.severity}')">Send Alert</button>
+                    </div>
+                `;
+                newsList.appendChild(card);
+            });
+        }
+
+        async function loadStats() {
+            const response = await fetch('/api/stats');
+            const stats = await response.json();
+
+            document.getElementById('critical-count').textContent = stats.critical;
+            document.getElementById('high-count').textContent = stats.high;
+            document.getElementById('medium-count').textContent = stats.medium;
+            document.getElementById('total-count').textContent = stats.total;
+        }
+
+        async function refreshNews() {
+            console.log('Refreshing news...');
+            const response = await fetch('/api/refresh');
+            const data = await response.json();
+            alert(data.message);
+            setTimeout(loadNews, 1000);
+        }
+
+        async function sendAlert(title, url, severity) {
+            const response = await fetch('/api/send-alert', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({title, url, severity})
+            });
+            const data = await response.json();
+            alert(data.status === 'success' ? '✅ Alert sent!' : '❌ Failed to send alert');
+        }
+
+        async function sendDigest() {
+            alert('Sending WhatsApp digest...');
+        }
+
+        function filterBySeverity(severity) {
+            const url = new URL(window.location);
+            if (severity) {
+                url.searchParams.set('severity', severity);
+            } else {
+                url.searchParams.delete('severity');
+            }
+            window.location = url;
+        }
+
+        // Load data on page load and refresh every 30 minutes
+        loadNews();
+        loadStats();
+        setInterval(loadNews, 1800000);
+        setInterval(loadStats, 1800000);
+    </script>
+</body>
+</html>

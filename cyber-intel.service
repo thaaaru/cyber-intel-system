@@ -1,0 +1,14 @@
+[Unit]
+Description=Cyber Security Intelligence Service
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/cyber-intel
+ExecStart=/opt/cyber-intel/venv/bin/python3 /opt/cyber-intel/app.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
