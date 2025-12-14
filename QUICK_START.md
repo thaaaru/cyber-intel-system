@@ -6,24 +6,39 @@ Get your Cyber Security Intelligence System running in 5 minutes.
 
 ## ⚡ TL;DR - Copy & Paste Commands
 
+### Fastest Way (One Command)
+
 ```bash
-# 1. SSH to your server
-ssh root@68.183.176.66
+git clone https://github.com/thaaaru/cyber-intel-system.git /opt/cyber-intel && \
+sudo /opt/cyber-intel/deploy.sh
+```
 
-# 2. Download and run setup
+Then edit config and restart:
+```bash
+sudo nano /opt/cyber-intel/.env
+sudo systemctl restart cyber-intel
+```
+
+### Alternative: Download & Run
+
+```bash
 cd /tmp
-curl -O https://your-repo/setup.sh
-chmod +x setup.sh
-sudo ./setup.sh
+curl -O https://raw.githubusercontent.com/thaaaru/cyber-intel-system/main/deploy.sh
+chmod +x deploy.sh
+sudo ./deploy.sh
+```
 
-# 3. Edit Twilio credentials
-nano /opt/cyber-intel/.env
+### After Deployment
 
-# 4. Start the service
-systemctl start cyber-intel
+```bash
+# 1. Edit Twilio credentials
+sudo nano /opt/cyber-intel/.env
 
-# 5. Open dashboard
-# Visit: http://68.183.176.66:5000
+# 2. Restart service
+sudo systemctl restart cyber-intel
+
+# 3. Open dashboard
+# Visit: http://your-server-ip:5000
 ```
 
 ---

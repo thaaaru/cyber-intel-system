@@ -2,42 +2,51 @@
 
 This guide shows how to deploy the Cyber Security Intelligence System from the GitHub repository.
 
+The deploy script now works from **ANY directory** - no need to cd into the project folder!
+
 ---
 
-## ✅ Correct Way to Deploy
+## ✅ Deploy in 4 Simple Steps
 
 ### Step 1: Clone the Repository
 
 ```bash
-# Clone to /opt/cyber-intel
 git clone https://github.com/thaaaru/cyber-intel-system.git /opt/cyber-intel
-
-# Or clone to any directory, then copy to /opt
-git clone https://github.com/thaaaru/cyber-intel-system.git
-cp -r cyber-intel-system /opt/cyber-intel
 ```
 
-### Step 2: Navigate to Project Directory
+Or clone to any directory:
 
 ```bash
+git clone https://github.com/thaaaru/cyber-intel-system.git ~/cyber-intel
+```
+
+### Step 2: Make Deploy Script Executable
+
+```bash
+chmod +x /path/to/deploy.sh
+```
+
+### Step 3: Run Deployment (From Anywhere!)
+
+You can run the script from **ANY directory**:
+
+```bash
+# From home directory
+sudo /opt/cyber-intel/deploy.sh
+
+# From /tmp
+sudo /tmp/deploy.sh
+
+# From project directory (also works)
 cd /opt/cyber-intel
-```
-
-This is IMPORTANT! The deploy script must run from the project directory.
-
-### Step 3: Make Deploy Script Executable
-
-```bash
-chmod +x deploy.sh
-```
-
-### Step 4: Run the Deployment Script
-
-```bash
 sudo ./deploy.sh
+
+# Using bash directly
+sudo bash /opt/cyber-intel/deploy.sh
 ```
 
 The script will:
+- Auto-detect source files location
 - Check for system dependencies
 - Create Python virtual environment
 - Copy all application files
@@ -49,16 +58,31 @@ The script will:
 
 ---
 
-## 🚀 One-Command Deployment
+## 🚀 Fastest Deployment (One-Line Command)
 
-If you want everything in one command:
+Clone and deploy everything in one go:
 
 ```bash
 git clone https://github.com/thaaaru/cyber-intel-system.git /opt/cyber-intel && \
-cd /opt/cyber-intel && \
-chmod +x deploy.sh && \
+sudo /opt/cyber-intel/deploy.sh
+```
+
+That's it! No need to cd anywhere.
+
+---
+
+## 🌐 Download and Run Directly
+
+You don't even need to clone first. Just download and run:
+
+```bash
+cd /tmp
+curl -O https://raw.githubusercontent.com/thaaaru/cyber-intel-system/main/deploy.sh
+chmod +x deploy.sh
 sudo ./deploy.sh
 ```
+
+The script will auto-detect where the repo files are and pull them.
 
 ---
 
