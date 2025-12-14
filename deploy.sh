@@ -3,9 +3,13 @@
 #############################################################################
 # Cyber Security Intelligence System - Automated Deployment Script
 #
-# Usage: chmod +x deploy.sh && sudo ./deploy.sh
+# Usage: sudo ./deploy.sh
+#        sudo bash deploy.sh
+#        curl ... | sudo bash
+#        sudo bash -c "$(curl -fsSL <url>)"
 #
 # This script automates the complete setup on your server
+# Works from ANY directory - auto-detects source location
 #############################################################################
 
 set -e  # Exit on any error
@@ -21,6 +25,10 @@ NC='\033[0m' # No Color
 PROJECT_DIR="/opt/cyber-intel"
 PYTHON_VERSION="3.8"
 SERVICE_NAME="cyber-intel"
+
+# Auto-detect script location (works from any directory)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SOURCE_DIR="$SCRIPT_DIR"  # Source files are in same directory as this script
 
 #############################################################################
 # Helper Functions
@@ -185,39 +193,40 @@ setup_python_environment() {
 copy_application_files() {
     print_header "Copying Application Files"
 
-    # Check if files exist in current directory or if we need to get them from git
-    if [ ! -f "app.py" ]; then
-        if [ -d ".git" ]; then
-            print_info "Git repository detected, files should be present"
-        else
-            print_error "Application files not found. Please run this script from the project directory or clone the repository first."
-        fi
+    # Check if files exist in source directory
+    if [ ! -f "$SOURCE_DIR/app.py" ]; then
+        print_error "Application files not found in source directory: $SOURCE_DIR"
     fi
 
-    # Copy Python files (if they exist, skip if already in place)
-    [ -f "app.py" ] && cp app.py "$PROJECT_DIR/" && print_step "Copied app.py"
-    [ -f "scraper.py" ] && cp scraper.py "$PROJECT_DIR/" && print_step "Copied scraper.py"
-    [ -f "whatsapp_sender.py" ] && cp whatsapp_sender.py "$PROJECT_DIR/" && print_step "Copied whatsapp_sender.py"
-    [ -f "scheduler.py" ] && cp scheduler.py "$PROJECT_DIR/" && print_step "Copied scheduler.py"
-    [ -f "database.py" ] && cp database.py "$PROJECT_DIR/" && print_step "Copied database.py"
+    print_info "Source directory: $SOURCE_DIR"
+    print_info "Target directory: $PROJECT_DIR"
+
+    # Copy Python files
+    [ -f "$SOURCE_DIR/app.py" ] && cp "$SOURCE_DIR/app.py" "$PROJECT_DIR/" && print_step "Copied app.py"
+    [ -f "$SOURCE_DIR/scraper.py" ] && cp "$SOURCE_DIR/scraper.py" "$PROJECT_DIR/" && print_step "Copied scraper.py"
+    [ -f "$SOURCE_DIR/whatsapp_sender.py" ] && cp "$SOURCE_DIR/whatsapp_sender.py" "$PROJECT_DIR/" && print_step "Copied whatsapp_sender.py"
+    [ -f "$SOURCE_DIR/scheduler.py" ] && cp "$SOURCE_DIR/scheduler.py" "$PROJECT_DIR/" && print_step "Copied scheduler.py"
+    [ -f "$SOURCE_DIR/database.py" ] && cp "$SOURCE_DIR/database.py" "$PROJECT_DIR/" && print_step "Copied database.py"
 
     # Copy configuration files
-    [ -f "requirements.txt" ] && cp requirements.txt "$PROJECT_DIR/" && print_step "Copied requirements.txt"
+    [ -f "$SOURCE_DIR/requirements.txt" ] && cp "$SOURCE_DIR/requirements.txt" "$PROJECT_DIR/" && print_step "Copied requirements.txt"
 
     # Copy service file
-    [ -f "cyber-intel.service" ] && cp cyber-intel.service "$PROJECT_DIR/" && print_step "Copied systemd service file"
+    [ -f "$SOURCE_DIR/cyber-intel.service" ] && cp "$SOURCE_DIR/cyber-intel.service" "$PROJECT_DIR/" && print_step "Copied systemd service file"
 
     # Copy frontend files
-    [ -d "templates" ] && cp -r templates/* "$PROJECT_DIR/templates/" 2>/dev/null && print_step "Copied templates"
-    [ -d "static" ] && cp -r static/* "$PROJECT_DIR/static/" 2>/dev/null && print_step "Copied static files"
+    [ -d "$SOURCE_DIR/templates" ] && cp -r "$SOURCE_DIR/templates"/* "$PROJECT_DIR/templates/" 2>/dev/null && print_step "Copied templates"
+    [ -d "$SOURCE_DIR/static" ] && cp -r "$SOURCE_DIR/static"/* "$PROJECT_DIR/static/" 2>/dev/null && print_step "Copied static files"
 
     # Copy documentation
-    ls *.md >/dev/null 2>&1 && cp *.md "$PROJECT_DIR/" 2>/dev/null && print_step "Copied documentation"
+    [ -d "$SOURCE_DIR" ] && find "$SOURCE_DIR" -maxdepth 1 -name "*.md" -exec cp {} "$PROJECT_DIR/" \; 2>/dev/null && print_step "Copied documentation"
 
-    # Verify key files exist
+    # Verify key files exist in target
     if [ ! -f "$PROJECT_DIR/app.py" ]; then
-        print_error "Failed to copy application files. Please ensure you have the required files."
+        print_error "Failed to copy application files to $PROJECT_DIR"
     fi
+
+    print_step "All application files copied successfully"
 }
 
 install_python_packages() {
@@ -381,10 +390,16 @@ verify_installation() {
 main() {
     print_header "Cyber Security Intelligence System - Automated Deployment"
 
+    # Show where script is running from
+    print_info "Script running from: $(pwd)"
+    print_info "Source files location: $SOURCE_DIR"
+    print_info "Deployment target: $PROJECT_DIR"
+    echo ""
+
     echo -e "This script will:"
     echo -e "  1. Install system dependencies"
     echo -e "  2. Set up Python virtual environment"
-    echo -e "  3. Copy application files"
+    echo -e "  3. Copy application files from $SOURCE_DIR"
     echo -e "  4. Install Python packages"
     echo -e "  5. Initialize database"
     echo -e "  6. Configure Twilio credentials"
